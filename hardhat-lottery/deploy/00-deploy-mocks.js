@@ -12,8 +12,8 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
 
   if (developmentChains.includes(network.name)) {
     log("Local network detected! Deploying mocks...");
-    await deploy("MockV3Aggregator", {
-      contract: "MockV3Aggregator",
+    await deploy("VRFCoordinatorV2Mock", {
+      contract: "VRFCoordinatorV2Mock",
       from: deployer,
       log: true,
       args: [DECIMALS, INITIAL_ANSWER],
