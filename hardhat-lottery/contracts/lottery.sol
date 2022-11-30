@@ -172,11 +172,19 @@ contract Lottery is VRFConsumerBaseV2, AutomationCompatibleInterface {
         return s_players.length;
     }
 
+    function getLatestTimeStamp() public view returns (uint256){
+        return s_lastTimeStamp
+    }
+
     function getRequestConfirmations() public pure returns (uint256) {
         return REQUEST_CONFIRMATIONS;
     }
 
     function getInterval() public view returns (uint256) {
         return i_interval;
+    }
+
+    function getSubId() public view returns (uint256){
+        return i_subscriptionId;
     }
 }

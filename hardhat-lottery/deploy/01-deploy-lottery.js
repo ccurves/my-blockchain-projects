@@ -41,6 +41,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     log: true,
     waitConfirmations: network.config.blockConfirmations,
   });
+  await vrfCoordinatorV2Mock.addConsumer(subId, lottery.address);
 
   if (
     !developmentChains.includes(network.name) &&
