@@ -142,7 +142,7 @@ const {
             vrfCoordinatorV2Mock.fulfillRandomWords(1, lottery.address)
           ).to.be.revertedWith("nonexistent request");
         });
-        it("picks a winner, resets the lottery, and sendd winnings", async function () {
+        it("picks a winner, resets the lottery, and send winnings", async function () {
           const additionalPlayers = 3;
           const startingAcctIndex = 1;
           const accounts = await ethers.getSigners();
@@ -158,10 +158,23 @@ const {
           }
           const startingTimeStamp = await lottery.getLatestTimeStamp();
 
+          console.log(startingTimeStamp);
+
           await new Promise(async (resolve, reject) => {
-            lottery.once("WinnerPicked", () => {
+            lottery.once("WinnerPicked", async () => {
               try {
-                const recentWinner = await lottery,getRecentWinner()
+                const recentWinner = await lottery.getRecentWinner();
+                console.log(recentWinner);
+                console.log(accounts[2].address);
+                console.log(accounts[0].address);
+                console.log(accounts[1].address);
+                console.log(accounts[3].address);
+                const lotteryState = await lottery.getLotteryState();
+                const endingTimeStamp = await lottery.getLatestTimeStamp();
+                const numPlayers = await lottery.getNumOfPlayers();
+                assert.equal(numPlayers.toString(), "0");
+                assert.equal(lotteryState.toString(), "0");
+                assert(endingTimeStamp > startingTimeStamp);
               } catch (e) {
                 reject(e);
               }
@@ -173,6 +186,7 @@ const {
               txReciept.events[1].args.requestId,
               lottery.address
             );
+            // const winnerStartingBalance = await accounts[1].getBalance();
           });
         });
       });

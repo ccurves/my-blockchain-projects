@@ -92,10 +92,7 @@ contract Lottery is VRFConsumerBaseV2, AutomationCompatibleInterface {
     )
         public
         override
-        returns (
-            bool upkeepNeeded,
-            bytes memory /* performData */
-        )
+        returns (bool upkeepNeeded, bytes memory /* performData */)
     {
         bool isOpen = (LotteryState.Open == s_lotteryState);
         bool timePassed = (block.timestamp - s_lastTimeStamp > i_interval);
@@ -105,9 +102,7 @@ contract Lottery is VRFConsumerBaseV2, AutomationCompatibleInterface {
         return (upkeepNeeded, "0x0");
     }
 
-    function performUpkeep(
-        bytes calldata /* performData */
-    ) external override {
+    function performUpkeep(bytes calldata /* performData */) external override {
         (bool upkeepNeeded, ) = checkUpkeep("");
         if (!upkeepNeeded) {
             revert Lottery__UpkeepNotNeeded(
@@ -128,7 +123,7 @@ contract Lottery is VRFConsumerBaseV2, AutomationCompatibleInterface {
     }
 
     function fulfillRandomWords(
-        uint256, /*requestId*/
+        uint256 /*requestId*/,
         uint256[] memory randomWords
     ) internal override {
         uint256 indexedOfWinnner = randomWords[0] % s_players.length;
@@ -172,8 +167,8 @@ contract Lottery is VRFConsumerBaseV2, AutomationCompatibleInterface {
         return s_players.length;
     }
 
-    function getLatestTimeStamp() public view returns (uint256){
-        return s_lastTimeStamp
+    function getLatestTimeStamp() public view returns (uint256) {
+        return s_lastTimeStamp;
     }
 
     function getRequestConfirmations() public pure returns (uint256) {
@@ -184,7 +179,7 @@ contract Lottery is VRFConsumerBaseV2, AutomationCompatibleInterface {
         return i_interval;
     }
 
-    function getSubId() public view returns (uint256){
+    function getSubId() public view returns (uint256) {
         return i_subscriptionId;
     }
 }
