@@ -7,7 +7,7 @@ const {
 
 developmentChains.includes(network.name)
   ? describe.skip
-  : describe("Lottery Unit Test", async function () {
+  : describe("Lottery Staging Test", async function () {
       let lottery, lotteryEntranceFee, deployer;
 
       beforeEach(async function () {
@@ -18,10 +18,12 @@ developmentChains.includes(network.name)
 
       describe("fulfillRandomWords", function () {
         it("works with live CHainlink Keepers and Chainlink VRF, and we get a random winner", async function () {
-          //enter the lottery
+          //enter the Lottery
+          console.log("Setting up test...");
           const startingTimeStamp = await lottery.getLatestTimeStamp();
           const accounts = await ethers.getSigners();
 
+          console.log("Setting up Listener...");
           await new Promise(async (resolve, reject) => {
             lottery.once("WinnerPicked", async () => {
               console.log("WinnerPicked event fired!");
@@ -30,6 +32,7 @@ developmentChains.includes(network.name)
                 const recentWinner = await lottery.getRecentWinner();
                 const lotteryState = await lottery.getLotteryState();
                 const winnerEndingBalance = await accounts[0].getBalance();
+                console.log(winnerEndingBalance.toString());
                 const endingTimeStamp = await lottery.getLatestTimeStamp();
 
                 await expect(lottery.getPlayer(0)).to.be.reverted;
@@ -45,9 +48,12 @@ developmentChains.includes(network.name)
                 reject(error);
               }
             });
+            console.log("Entering Lottery...");
+            await lottery.enterLottery({ value: lotteryEntranceFee });
 
-            await lottery.enterRaffle({ value: lotteryEntranceFee });
+            console.log("Ok, time to wait...");
             const winnerStartingBalance = await accounts[0].getBalance();
+            console.log(winnerStartingBalance.toString());
           });
         });
       });
