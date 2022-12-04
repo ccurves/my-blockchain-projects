@@ -8,12 +8,16 @@ const {
 !developmentChains.includes(network.name)
   ? describe.skip
   : describe("Lottery Unit Test", async function () {
-      let lottery, vrfCoordinatorV2Mock, chainId, lotteryEntranceFee, interval;
-      chainId = network.config.chainId;
-      let { deployer } = await getNamedAccounts();
+      let lottery,
+        vrfCoordinatorV2Mock,
+        chainId,
+        lotteryEntranceFee,
+        interval,
+        deployer;
 
       beforeEach(async function () {
         await deployments.fixture(["all"]);
+        deployer = (await getNamedAccounts()).deployer;
         lottery = await ethers.getContract("Lottery", deployer);
         vrfCoordinatorV2Mock = await ethers.getContract(
           "VRFCoordinatorV2Mock",
@@ -21,6 +25,7 @@ const {
         );
         lotteryEntranceFee = await lottery.getEntranceFee();
         interval = await lottery.getInterval();
+        chainId = network.config.chainId;
       });
 
       describe("constructor", async function () {
@@ -125,6 +130,7 @@ const {
           assert(lotteryState.toString() == "1");
         });
       });
+
       describe("fulfillRandomWords", function () {
         beforeEach(async function () {
           await lottery.enterLottery({ value: lotteryEntranceFee });
@@ -144,7 +150,7 @@ const {
         });
         it("picks a winner, resets the lottery, and send winnings", async function () {
           const additionalPlayers = 3;
-          const startingAcctIndex = 1;
+          const startingAcctIndex = 2;
           const accounts = await ethers.getSigners();
           for (
             let i = startingAcctIndex;
@@ -158,35 +164,42 @@ const {
           }
           const startingTimeStamp = await lottery.getLatestTimeStamp();
 
-          console.log(startingTimeStamp);
-
           await new Promise(async (resolve, reject) => {
             lottery.once("WinnerPicked", async () => {
+              console.log("WinnerPicked event fired!");
+
               try {
                 const recentWinner = await lottery.getRecentWinner();
-                console.log(recentWinner);
-                console.log(accounts[2].address);
-                console.log(accounts[0].address);
-                console.log(accounts[1].address);
-                console.log(accounts[3].address);
                 const lotteryState = await lottery.getLotteryState();
                 const endingTimeStamp = await lottery.getLatestTimeStamp();
-                const numPlayers = await lottery.getNumOfPlayers();
+                const numPlayers = await lottery.getNumberOfPlayers();
+                const winnerEndingBalance = await accounts[2].getBalance();
                 assert.equal(numPlayers.toString(), "0");
                 assert.equal(lotteryState.toString(), "0");
                 assert(endingTimeStamp > startingTimeStamp);
+                assert.equal(
+                  winnerEndingBalance.toString(),
+                  winnerStartingBalance
+                    .add(
+                      lotteryEntranceFee
+                        .mul(additionalPlayers)
+                        .add(lotteryEntranceFee)
+                    )
+                    .toString()
+                );
+                resolve();
               } catch (e) {
+                console.log(e);
                 reject(e);
               }
-              resolve();
             });
             const tx = await lottery.performUpkeep([]);
             const txReciept = await tx.wait(1);
+            const winnerStartingBalance = await accounts[2].getBalance();
             await vrfCoordinatorV2Mock.fulfillRandomWords(
               txReciept.events[1].args.requestId,
               lottery.address
             );
-            // const winnerStartingBalance = await accounts[1].getBalance();
           });
         });
       });
